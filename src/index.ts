@@ -5,7 +5,7 @@ const useMasterKey = true;
 
 module.exports = init;
 
-const PARSE_LDAP_ACTIVE = process.env.PARSE_LDAP_ACTIVE == "true";
+const PARSE_LDAP_ACTIVE = (process.env.PARSE_LDAP_ACTIVE ?? true) == "true";
 const PARSE_LDAP_FUNCTION_NAME = process.env.PARSE_LDAP_FUNCTION_NAME || "ldap_login";
 
 const PARSE_LDAP_URL = process.env.PARSE_LDAP_URL || "ldap://127.0.0.1:389";
@@ -13,6 +13,7 @@ const PARSE_LDAP_BASEPATH = process.env.PARSE_LDAP_BASEPATH;
 const PARSE_LDAP_LOGIN_BIND_DN = process.env.PARSE_LDAP_LOGIN_BIND_DN;
 const PARSE_LDAP_LOGIN_SEARCH_DN = process.env.PARSE_LDAP_LOGIN_SEARCH_DN;
 const PARSE_LDAP_LOGIN_SEARCH_FILTER = process.env.PARSE_LDAP_LOGIN_SEARCH_FILTER;
+const PARSE_LDAP_LOGIN_STRIP_AD_DOMAIN = process.env.PARSE_LDAP_LOGIN_STRIP_AD_DOMAIN == "true";
 
 const PARSE_LDAP_DN_ATTRIBUTE = process.env.PARSE_LDAP_DN_ATTRIBUTE || "dn";
 const PARSE_LDAP_USERNAME_ATTRIBUTE = process.env.PARSE_LDAP_USERNAME_ATTRIBUTE || "uid";
@@ -139,6 +140,10 @@ async function validateCredentials(username, password) {
   const client = new Client({ url: PARSE_LDAP_URL });
 
   try {
+    if (PARSE_LDAP_LOGIN_STRIP_AD_DOMAIN) {
+      username = username.split("\\").pop();
+    }
+
     const bindPath = PARSE_LDAP_LOGIN_BIND_DN.replace("%user%", username).replace("%basepath%", PARSE_LDAP_BASEPATH);
 
     await client.bind(bindPath, password);
