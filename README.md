@@ -26,16 +26,19 @@ Configuration is done using environment variables:
 - `PARSE_LDAP_BASEPATH` should be set to a base path, i.e.: `"dc=example,dc=com"`
 - `PARSE_LDAP_LOGIN_BIND_DN` must be set to a DN which will identify the user, i.e.: `"uid=%user%,ou=Users,%basepath%"`.
   - `%user%` will be replaced by the username the user is providing to the Cloud Code Function
+  - `%userWithoutDomain%` same as `%user%`, but will strip the domain part, i.e.: `domain.com\username` will become `username`
   - `%basepath%` will be replaced by the value of `PARSE_LDAP_BASEPATH`
-- `PARSE_LDAP_LOGIN_STRIP_AD_DOMAIN` (default: "false") can be set to `"true"` to strip the domain part of the login, i.e.: `domain.com\username` will become `username`
 
 After binding the user, the user profile will be searched. This is done by using `PARSE_LDAP_LOGIN_BIND_DN`. If this will not work for you, you can search for the user within a DN with a given filter:
 
 - `PARSE_LDAP_LOGIN_SEARCH_DN`
   - `%user%` will be replaced by the username the user is providing to the Cloud Code Function
+  - `%userWithoutDomain%` same as `%user%`, but will strip the domain part, i.e.: `domain.com\username` will become `username`
   - `%basepath%` will be replaced by the value of `PARSE_LDAP_BASEPATH`
 - `PARSE_LDAP_LOGIN_SEARCH_FILTER`
   - `%user%` will be replaced by the username the user is providing to the Cloud Code Function
+  - `%userWithoutDomain%` same as `%user%`, but will strip the domain part, i.e.: `domain.com\username` will become `username`
+  - `%basepath%` will be replaced by the value of `PARSE_LDAP_BASEPATH`
 
 You can change which attributes from LDAP and which attributes in Parse will be used:
 

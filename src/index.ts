@@ -140,20 +140,20 @@ async function validateCredentials(username, password) {
   const client = new Client({ url: PARSE_LDAP_URL });
 
   try {
-    if (PARSE_LDAP_LOGIN_STRIP_AD_DOMAIN) {
-      username = username.split("\\").pop();
-    }
+    const user = username;
+    const userWithoutDomain = username.split("\\").pop();
+    const basepath = PARSE_LDAP_BASEPATH;
 
-    const bindPath = PARSE_LDAP_LOGIN_BIND_DN.replace("%user%", username).replace("%basepath%", PARSE_LDAP_BASEPATH);
+    const bindPath = replaceParams(PARSE_LDAP_LOGIN_BIND_DN, { user, userWithoutDomain, basepath });
 
     await client.bind(bindPath, password);
 
     const searchPath = PARSE_LDAP_LOGIN_SEARCH_DN
-      ? PARSE_LDAP_LOGIN_SEARCH_DN.replace("%user%", username).replace("%basepath%", PARSE_LDAP_BASEPATH)
+      ? replaceParams(PARSE_LDAP_LOGIN_SEARCH_DN, { user, userWithoutDomain, basepath })
       : bindPath;
 
     const searchFilter = PARSE_LDAP_LOGIN_SEARCH_FILTER
-      ? PARSE_LDAP_LOGIN_SEARCH_FILTER.replace("%user%", username)
+      ? replaceParams(PARSE_LDAP_LOGIN_SEARCH_FILTER, { user, userWithoutDomain, basepath })
       : undefined;
 
     const { searchEntries } = await client.search(searchPath, {
@@ -189,12 +189,12 @@ async function validateGroupMember(dn) {
 
   try {
     await client.bind(
-      PARSE_LDAP_SERVICE_USER_DN.replace("%basepath%", PARSE_LDAP_BASEPATH),
+      replaceParams(PARSE_LDAP_SERVICE_USER_DN, { basepath: PARSE_LDAP_BASEPATH }),
       PARSE_LDAP_SERVICE_USER_PW
     );
 
     const { searchEntries } = await client.search(
-      PARSE_LDAP_SERVICE_GROUP_DN.replace("%basepath%", PARSE_LDAP_BASEPATH),
+      replaceParams(PARSE_LDAP_SERVICE_GROUP_DN, { basepath: PARSE_LDAP_BASEPATH }),
       {
         scope: "base"
       }
@@ -227,12 +227,12 @@ async function getValidGroupMembers() {
 
   try {
     await client.bind(
-      PARSE_LDAP_SERVICE_USER_DN.replace("%basepath%", PARSE_LDAP_BASEPATH),
+      replaceParams(PARSE_LDAP_SERVICE_USER_DN, { basepath: PARSE_LDAP_BASEPATH }),
       PARSE_LDAP_SERVICE_USER_PW
     );
 
     const { searchEntries } = await client.search(
-      PARSE_LDAP_SERVICE_GROUP_DN.replace("%basepath%", PARSE_LDAP_BASEPATH),
+      replaceParams(PARSE_LDAP_SERVICE_GROUP_DN, { basepath: PARSE_LDAP_BASEPATH }),
       {
         scope: "base"
       }
@@ -254,6 +254,16 @@ async function getValidGroupMembers() {
   } finally {
     await client.unbind();
   }
+}
+
+function replaceParams(input: string, params: Record<string, string>): string {
+  let inputWithParams = input;
+
+  for (const [param, value] of Object.entries(params)) {
+    inputWithParams = inputWithParams.replace(`%${param}%`, value);
+  }
+
+  return inputWithParams;
 }
 
 // async function test() {
