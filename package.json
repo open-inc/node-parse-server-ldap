@@ -1,6 +1,6 @@
 {
   "name": "@openinc/parse-server-ldap",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Parse Server Cloud Code to authentificate with LDAP/AD",
   "keywords": [
     "parse",
