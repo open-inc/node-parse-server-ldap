@@ -122,7 +122,7 @@ async function init(Parse) {
       user_c.set("email", user.email);
       user_c.set("name", user.name);
       user_c.set(PARSE_LDAP_PARSE_LDAP_ATTRIBUTE, true);
-      user_a.set(PARSE_LDAP_PARSE_LDAP_DN_ATTRIBUTE, user.dn);
+      user_c.set(PARSE_LDAP_PARSE_LDAP_DN_ATTRIBUTE, user.dn);
       user_c.set("password", token);
 
       await user_c.signUp();
