@@ -25,7 +25,6 @@ Configuration is done using environment variables:
 - `PARSE_LDAP_URL` (default: "ldap://127.0.0.1:389") should be set to the LDAP server connection URL
 - `PARSE_LDAP_BASEPATH` should be set to a base path, i.e.: `"dc=example,dc=com"`
 - `PARSE_LDAP_LOGIN_BIND_DN` must be set to a DN which will identify the user, i.e.: `"uid=%user%,ou=Users,%basepath%"`.
-
   - `%user%` will be replaced by the username the user is providing to the Cloud Code Function
   - `%userWithoutDomain%` same as `%user%`, but will strip the domain part, i.e.: `domain.com\username` will become `username`
   - `%basepath%` will be replaced by the value of `PARSE_LDAP_BASEPATH`
