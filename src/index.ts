@@ -11,6 +11,9 @@ const PARSE_LDAP_FUNCTION_NAME = process.env.PARSE_LDAP_FUNCTION_NAME || "ldap_l
 const PARSE_LDAP_URL = process.env.PARSE_LDAP_URL || "ldap://127.0.0.1:389";
 const PARSE_LDAP_BASEPATH = process.env.PARSE_LDAP_BASEPATH;
 const PARSE_LDAP_LOGIN_BIND_DN = process.env.PARSE_LDAP_LOGIN_BIND_DN;
+const PARSE_LDAP_LOGIN_BIND_MAP_FILTER = process.env.PARSE_LDAP_BIND_MAP_FILTER;
+const PARSE_LDAP_LOGIN_BIND_MAP_ATTRIBUTE = process.env.PARSE_LDAP_BIND_MAP_ATTRIBUTE || "dn";
+const PARSE_LDAP_LOGIN_BIND_MAP_TO = process.env.PARSE_LDAP_BIND_MAP_TO || "%output%";
 const PARSE_LDAP_LOGIN_SEARCH_DN = process.env.PARSE_LDAP_LOGIN_SEARCH_DN;
 const PARSE_LDAP_LOGIN_SEARCH_FILTER = process.env.PARSE_LDAP_LOGIN_SEARCH_FILTER;
 const PARSE_LDAP_LOGIN_STRIP_AD_DOMAIN = process.env.PARSE_LDAP_LOGIN_STRIP_AD_DOMAIN == "true";
@@ -75,7 +78,7 @@ async function init(Parse) {
     }
   }
 
-  Parse.Cloud.define(PARSE_LDAP_FUNCTION_NAME, async function(request) {
+  Parse.Cloud.define(PARSE_LDAP_FUNCTION_NAME, async function (request) {
     try {
       // Get credentials from request
       const { username, password } = request.params;
@@ -144,7 +147,7 @@ async function validateCredentials(username, password) {
     const userWithoutDomain = username.split("\\").pop();
     const basepath = PARSE_LDAP_BASEPATH;
 
-    const bindPath = replaceParams(PARSE_LDAP_LOGIN_BIND_DN, { user, userWithoutDomain, basepath });
+    const bindPath = await getBindPath({ user, userWithoutDomain, basepath });
 
     await client.bind(bindPath, password);
 
@@ -163,8 +166,8 @@ async function validateCredentials(username, password) {
         PARSE_LDAP_DN_ATTRIBUTE,
         PARSE_LDAP_USERNAME_ATTRIBUTE,
         PARSE_LDAP_EMAIL_ATTRIBUTE,
-        PARSE_LDAP_NAME_ATTRIBUTE
-      ]
+        PARSE_LDAP_NAME_ATTRIBUTE,
+      ],
     });
 
     if (searchEntries.length !== 1) {
@@ -175,8 +178,42 @@ async function validateCredentials(username, password) {
       dn: searchEntries[0][PARSE_LDAP_DN_ATTRIBUTE],
       email: searchEntries[0][PARSE_LDAP_EMAIL_ATTRIBUTE],
       username: searchEntries[0][PARSE_LDAP_USERNAME_ATTRIBUTE],
-      name: searchEntries[0][PARSE_LDAP_NAME_ATTRIBUTE]
+      name: searchEntries[0][PARSE_LDAP_NAME_ATTRIBUTE],
     };
+  } catch (error) {
+    throw error;
+  } finally {
+    await client.unbind();
+  }
+}
+
+async function getBindPath(params) {
+  if (!PARSE_LDAP_LOGIN_BIND_MAP_FILTER) {
+    return replaceParams(PARSE_LDAP_LOGIN_BIND_DN, params);
+  }
+
+  const client = new Client({ url: PARSE_LDAP_URL });
+
+  try {
+    await client.bind(
+      replaceParams(PARSE_LDAP_SERVICE_USER_DN, { basepath: PARSE_LDAP_BASEPATH }),
+      PARSE_LDAP_SERVICE_USER_PW
+    );
+
+    const { searchEntries } = await client.search(replaceParams(PARSE_LDAP_LOGIN_BIND_DN, params), {
+      filter: replaceParams(PARSE_LDAP_LOGIN_BIND_MAP_FILTER, params),
+      scope: "sub",
+    });
+
+    const [user] = searchEntries;
+
+    if (!user) {
+      throw new Error(`User Not Found While Mapping: ${searchEntries.length}`);
+    }
+
+    const attribute = user[PARSE_LDAP_LOGIN_BIND_MAP_ATTRIBUTE];
+
+    return replaceParams(PARSE_LDAP_LOGIN_BIND_MAP_TO, { ...params, output: attribute });
   } catch (error) {
     throw error;
   } finally {
@@ -196,7 +233,7 @@ async function validateGroupMember(dn) {
     const { searchEntries } = await client.search(
       replaceParams(PARSE_LDAP_SERVICE_GROUP_DN, { basepath: PARSE_LDAP_BASEPATH }),
       {
-        scope: "base"
+        scope: "base",
       }
     );
 
@@ -234,7 +271,7 @@ async function getValidGroupMembers() {
     const { searchEntries } = await client.search(
       replaceParams(PARSE_LDAP_SERVICE_GROUP_DN, { basepath: PARSE_LDAP_BASEPATH }),
       {
-        scope: "base"
+        scope: "base",
       }
     );
 
@@ -265,19 +302,3 @@ function replaceParams(input: string, params: Record<string, string>): string {
 
   return inputWithParams;
 }
-
-// async function test() {
-//   try {
-//     const user = await validateCredentials("user", "password");
-//     const isAuthorized = await validateGroupMember(user.dn);
-
-//     console.log(user, isAuthorized);
-
-//     // const members = await getValidGroupMembers();
-//     // console.log(members);
-//   } catch (error) {
-//     console.error(error);
-//   }
-// }
-
-// test();
