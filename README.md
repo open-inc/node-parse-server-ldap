@@ -20,7 +20,6 @@ initLDAP(Parse);
 
 Configuration is done using environment variables:
 
-- `PARSE_LDAP_ACTIVE` (default: "true") can be set to `"false"` to disable the plugin.
 - `PARSE_LDAP_FUNCTION_NAME` (default: "ldap_login") will be passed to `Parse.Cloud.define(PARSE_LDAP_FUNCTION_NAME)`
 - `PARSE_LDAP_URL` (default: "ldap://127.0.0.1:389") should be set to the LDAP server connection URL
 - `PARSE_LDAP_BASEPATH` should be set to a base path, i.e.: `"dc=example,dc=com"`

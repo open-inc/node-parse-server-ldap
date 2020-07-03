@@ -5,7 +5,6 @@ const useMasterKey = true;
 
 module.exports = init;
 
-const PARSE_LDAP_ACTIVE = (process.env.PARSE_LDAP_ACTIVE ?? true) == "true";
 const PARSE_LDAP_FUNCTION_NAME = process.env.PARSE_LDAP_FUNCTION_NAME || "ldap_login";
 
 const PARSE_LDAP_URL = process.env.PARSE_LDAP_URL || "ldap://127.0.0.1:389";
@@ -31,8 +30,13 @@ const PARSE_LDAP_SERVICE_GROUP_DN = process.env.PARSE_LDAP_SERVICE_GROUP_DN;
 const PARSE_LDAP_SERVICE_INTERVAL = parseInt(process.env.PARSE_LDAP_SERVICE_INTERVAL);
 
 async function init(Parse) {
-  if (!PARSE_LDAP_ACTIVE || !PARSE_LDAP_URL || !PARSE_LDAP_BASEPATH || !PARSE_LDAP_LOGIN_BIND_DN) {
-    console.log("Parse LDAP Plugin is not active.");
+  if (!PARSE_LDAP_URL) {
+    console.log("Parse LDAP Plugin is not active. PARSE_LDAP_URL is required.");
+    return;
+  }
+
+  if (!PARSE_LDAP_LOGIN_BIND_DN) {
+    console.log("Parse LDAP Plugin is not active. PARSE_LDAP_LOGIN_BIND_DN is required.");
     return;
   }
 
