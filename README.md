@@ -86,4 +86,4 @@ Optionally you can set a LDAP group to restrict, which users will be allowed to 
 - `PARSE_LDAP_SERVICE_USER_DN` DN for the service user
   - `%basepath%` will be replaced by the value of `PARSE_LDAP_BASEPATH`
 - `PARSE_LDAP_SERVICE_USER_PW` PW for the service user
-- `PARSE_LDAP_SERVICE_INTERVAL` can be used to pass a number in milliseconds, which will be used to start an interval in which all Parse users coming from LDAP will be validated as active LDAP users.
+- `PARSE_LDAP_SERVICE_INTERVAL` can be used to pass a number in seconds, which will be used to start an interval in which all Parse users coming from LDAP will be validated as active LDAP users.

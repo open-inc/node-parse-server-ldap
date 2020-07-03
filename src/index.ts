@@ -48,7 +48,7 @@ async function init(Parse) {
     PARSE_LDAP_SERVICE_USER_PW &&
     PARSE_LDAP_SERVICE_GROUP_DN
   ) {
-    setInterval(validateParseUsers, PARSE_LDAP_SERVICE_INTERVAL);
+    setInterval(validateParseUsers, PARSE_LDAP_SERVICE_INTERVAL * 1000);
 
     async function validateParseUsers() {
       try {
