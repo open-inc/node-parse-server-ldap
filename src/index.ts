@@ -40,6 +40,20 @@ async function init(Parse) {
     return;
   }
 
+  if (PARSE_LDAP_LOGIN_BIND_MAP_FILTER && (!PARSE_LDAP_SERVICE_USER_DN || !PARSE_LDAP_SERVICE_USER_PW)) {
+    console.log(
+      "Parse LDAP Plugin is not active. PARSE_LDAP_LOGIN_BIND_MAP_FILTER requires PARSE_LDAP_SERVICE_USER_DN and PARSE_LDAP_SERVICE_USER_PW to be set."
+    );
+    return;
+  }
+
+  if (PARSE_LDAP_SERVICE_GROUP_DN && (!PARSE_LDAP_SERVICE_USER_DN || !PARSE_LDAP_SERVICE_USER_PW)) {
+    console.log(
+      "Parse LDAP Plugin is not active. PARSE_LDAP_SERVICE_GROUP_DN requires PARSE_LDAP_SERVICE_USER_DN and PARSE_LDAP_SERVICE_USER_PW to be set."
+    );
+    return;
+  }
+
   console.log("Parse LDAP Plugin is active.");
 
   if (
@@ -48,6 +62,8 @@ async function init(Parse) {
     PARSE_LDAP_SERVICE_USER_PW &&
     PARSE_LDAP_SERVICE_GROUP_DN
   ) {
+    console.log("Parse LDAP Plugin periodic Group Check is active.");
+
     setInterval(validateParseUsers, PARSE_LDAP_SERVICE_INTERVAL * 1000);
 
     async function validateParseUsers() {
