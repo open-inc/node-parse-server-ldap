@@ -128,13 +128,26 @@ async function init() {
         user_a.set("name", user.name);
         user_a.set(PARSE_LDAP_PARSE_LDAP_ATTRIBUTE, true);
         user_a.set(PARSE_LDAP_PARSE_LDAP_DN_ATTRIBUTE, user.dn);
-        user_a.set("password", token);
 
         await user_a.save(null, { useMasterKey });
 
-        const user_b = await Parse.User.logIn(user.username, token);
+        const sessionToken = "r:" + token.slice(0, 32);
 
-        return { ...user, session: user_b.getSessionToken() };
+        const session = new Parse.Object("_Session", {
+          sessionToken,
+          user: user_a,
+          restricted: false,
+          expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365),
+          installationId: request.installationId,
+          createdWith: {
+            action: "login",
+            provider: "openinc-ldap",
+          },
+        });
+
+        await session.save(null, { useMasterKey });
+
+        return { ...user, session: sessionToken };
       }
 
       // If lookup failed: Create missing user in Parse
