@@ -8,8 +8,8 @@ module.exports = init;
 const PARSE_LDAP_FUNCTION_NAME = process.env.PARSE_LDAP_FUNCTION_NAME || "ldap_login";
 
 const PARSE_LDAP_URL = process.env.PARSE_LDAP_URL || "ldap://127.0.0.1:389";
-const PARSE_LDAP_BASEPATH = process.env.PARSE_LDAP_BASEPATH;
-const PARSE_LDAP_LOGIN_BIND_DN = process.env.PARSE_LDAP_LOGIN_BIND_DN;
+const PARSE_LDAP_BASEPATH = process.env.PARSE_LDAP_BASEPATH || "";
+const PARSE_LDAP_LOGIN_BIND_DN = process.env.PARSE_LDAP_LOGIN_BIND_DN || "";
 const PARSE_LDAP_LOGIN_BIND_MAP_FILTER = process.env.PARSE_LDAP_LOGIN_BIND_MAP_FILTER;
 const PARSE_LDAP_LOGIN_BIND_MAP_ATTRIBUTE = process.env.PARSE_LDAP_LOGIN_BIND_MAP_ATTRIBUTE || "dn";
 const PARSE_LDAP_LOGIN_BIND_MAP_TO = process.env.PARSE_LDAP_LOGIN_BIND_MAP_TO || "%output%";
@@ -24,12 +24,12 @@ const PARSE_LDAP_NAME_ATTRIBUTE = process.env.PARSE_LDAP_NAME_ATTRIBUTE || "cn";
 const PARSE_LDAP_PARSE_LDAP_ATTRIBUTE = process.env.PARSE_LDAP_PARSE_LDAP_ATTRIBUTE || "ldap";
 const PARSE_LDAP_PARSE_LDAP_DN_ATTRIBUTE = process.env.PARSE_LDAP_PARSE_LDAP_DN_ATTRIBUTE || "ldap_dn";
 
-const PARSE_LDAP_SERVICE_USER_DN = process.env.PARSE_LDAP_SERVICE_USER_DN;
-const PARSE_LDAP_SERVICE_USER_PW = process.env.PARSE_LDAP_SERVICE_USER_PW;
-const PARSE_LDAP_SERVICE_GROUP_DN = process.env.PARSE_LDAP_SERVICE_GROUP_DN;
-const PARSE_LDAP_SERVICE_INTERVAL = parseInt(process.env.PARSE_LDAP_SERVICE_INTERVAL);
+const PARSE_LDAP_SERVICE_USER_DN = process.env.PARSE_LDAP_SERVICE_USER_DN || "";
+const PARSE_LDAP_SERVICE_USER_PW = process.env.PARSE_LDAP_SERVICE_USER_PW || "";
+const PARSE_LDAP_SERVICE_GROUP_DN = process.env.PARSE_LDAP_SERVICE_GROUP_DN || "";
+const PARSE_LDAP_SERVICE_INTERVAL = parseInt(process.env.PARSE_LDAP_SERVICE_INTERVAL || "");
 
-async function init(Parse) {
+async function init() {
   if (!PARSE_LDAP_URL) {
     console.log("Parse LDAP Plugin is not active. PARSE_LDAP_URL is required.");
     return;
@@ -158,12 +158,12 @@ async function init(Parse) {
   });
 }
 
-async function validateCredentials(username, password) {
+async function validateCredentials(username: string, password: string) {
   const client = new Client({ url: PARSE_LDAP_URL });
 
   try {
     const user = username;
-    const userWithoutDomain = username.split("\\").pop();
+    const userWithoutDomain = username.split("\\").pop() as string;
     const basepath = PARSE_LDAP_BASEPATH;
 
     const bindPath = await getBindPath({ user, userWithoutDomain, basepath });
@@ -206,7 +206,7 @@ async function validateCredentials(username, password) {
   }
 }
 
-async function getBindPath(params) {
+async function getBindPath(params: Record<string, string>) {
   if (!PARSE_LDAP_LOGIN_BIND_MAP_FILTER) {
     return replaceParams(PARSE_LDAP_LOGIN_BIND_DN, params);
   }
@@ -240,7 +240,7 @@ async function getBindPath(params) {
   }
 }
 
-async function validateGroupMember(dn) {
+async function validateGroupMember(dn: string) {
   const client = new Client({ url: PARSE_LDAP_URL });
 
   try {
