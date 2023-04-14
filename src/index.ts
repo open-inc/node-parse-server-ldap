@@ -11,10 +11,12 @@ const PARSE_LDAP_URL = process.env.PARSE_LDAP_URL || "ldap://127.0.0.1:389";
 const PARSE_LDAP_BASEPATH = process.env.PARSE_LDAP_BASEPATH || "";
 const PARSE_LDAP_LOGIN_BIND_DN = process.env.PARSE_LDAP_LOGIN_BIND_DN || "";
 const PARSE_LDAP_LOGIN_BIND_MAP_FILTER = process.env.PARSE_LDAP_LOGIN_BIND_MAP_FILTER;
+const PARSE_LDAP_LOGIN_BIND_MAP_SCOPE = process.env.PARSE_LDAP_LOGIN_BIND_MAP_SCOPE || "sub";
 const PARSE_LDAP_LOGIN_BIND_MAP_ATTRIBUTE = process.env.PARSE_LDAP_LOGIN_BIND_MAP_ATTRIBUTE || "dn";
 const PARSE_LDAP_LOGIN_BIND_MAP_TO = process.env.PARSE_LDAP_LOGIN_BIND_MAP_TO || "%output%";
 const PARSE_LDAP_LOGIN_SEARCH_DN = process.env.PARSE_LDAP_LOGIN_SEARCH_DN;
 const PARSE_LDAP_LOGIN_SEARCH_FILTER = process.env.PARSE_LDAP_LOGIN_SEARCH_FILTER;
+const PARSE_LDAP_LOGIN_SEARCH_SCOPE = process.env.PARSE_LDAP_LOGIN_SEARCH_SCOPE || "sub";
 
 const PARSE_LDAP_DN_ATTRIBUTE = process.env.PARSE_LDAP_DN_ATTRIBUTE || "dn";
 const PARSE_LDAP_USERNAME_ATTRIBUTE = process.env.PARSE_LDAP_USERNAME_ATTRIBUTE || "uid";
@@ -192,7 +194,7 @@ async function validateCredentials(username: string, password: string) {
       : undefined;
 
     const { searchEntries } = await client.search(searchPath, {
-      scope: "sub",
+      scope: PARSE_LDAP_LOGIN_SEARCH_SCOPE,
       filter: searchFilter,
       attributes: [
         PARSE_LDAP_DN_ATTRIBUTE,
@@ -234,7 +236,7 @@ async function getBindPath(params: Record<string, string>) {
 
     const { searchEntries } = await client.search(replaceParams(PARSE_LDAP_LOGIN_BIND_DN, params), {
       filter: replaceParams(PARSE_LDAP_LOGIN_BIND_MAP_FILTER, params),
-      scope: "sub",
+      scope: PARSE_LDAP_LOGIN_BIND_MAP_SCOPE,
     });
 
     const [user] = searchEntries;
