@@ -13,7 +13,7 @@
     "prepublish": "npm run build"
   },
   "dependencies": {
-    "ldapts": "2.2.0"
+    "ldapts": "2.12.0"
   },
   "devDependencies": {
     "@types/parse": "^2.18.13",
