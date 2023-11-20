@@ -31,6 +31,8 @@ const PARSE_LDAP_SERVICE_USER_PW = process.env.PARSE_LDAP_SERVICE_USER_PW || "";
 const PARSE_LDAP_SERVICE_GROUP_DN = process.env.PARSE_LDAP_SERVICE_GROUP_DN || "";
 const PARSE_LDAP_SERVICE_INTERVAL = parseInt(process.env.PARSE_LDAP_SERVICE_INTERVAL || "");
 
+const PARSE_LDAP_UNIFY_CREDENTIALS = process.env.PARSE_LDAP_UNIFY_CREDENTIALS === "true";
+
 async function init() {
   if (!PARSE_LDAP_URL) {
     console.log("Parse LDAP Plugin is not active. PARSE_LDAP_URL is required.");
@@ -210,8 +212,12 @@ async function validateCredentials(username: string, password: string) {
 
     return {
       dn: searchEntries[0][PARSE_LDAP_DN_ATTRIBUTE],
-      email: searchEntries[0][PARSE_LDAP_EMAIL_ATTRIBUTE],
-      username: searchEntries[0][PARSE_LDAP_USERNAME_ATTRIBUTE],
+      email: PARSE_LDAP_UNIFY_CREDENTIALS
+        ? searchEntries[0][PARSE_LDAP_EMAIL_ATTRIBUTE]?.toLowerCase().trim()
+        : searchEntries[0][PARSE_LDAP_EMAIL_ATTRIBUTE],
+      username: PARSE_LDAP_UNIFY_CREDENTIALS
+        ? searchEntries[0][PARSE_LDAP_USERNAME_ATTRIBUTE]?.toLowerCase().trim()
+        : searchEntries[0][PARSE_LDAP_USERNAME_ATTRIBUTE],
       name: searchEntries[0][PARSE_LDAP_NAME_ATTRIBUTE],
     };
   } catch (error) {
