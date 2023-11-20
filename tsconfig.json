@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "lib": ["ES2019"],
-    "target": "ES2017",
+    "target": "ES2020",
     "module": "commonjs",
     "esModuleInterop": true,
     "declaration": true,
@@ -9,7 +9,8 @@
     "strict": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitOverride": true
   },
   "include": ["src"],
   "exclude": ["node_modules"]
