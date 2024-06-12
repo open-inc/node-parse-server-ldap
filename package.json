@@ -1,7 +1,7 @@
 {
   "name": "@openinc/parse-server-ldap",
   "version": "0.5.0",
-  "description": "Parse Server Cloud Code to authentificate with LDAP/AD",
+  "description": "Parse Server Cloud Code to authenticate with LDAP/AD",
   "keywords": [
     "parse",
     "ldap"
@@ -13,11 +13,11 @@
     "prepublish": "npm run build"
   },
   "dependencies": {
-    "ldapts": "2.2.0"
+    "ldapts": "4.2.6"
   },
   "devDependencies": {
-    "@types/parse": "^3.0.7",
-    "typescript": "^5.2.2"
+    "@types/parse": "^3.0.9",
+    "typescript": "^5.4.5"
   },
   "prettier": {
     "printWidth": 120

@@ -1,4 +1,4 @@
-const crypto = require("crypto");
+const cryptolib = require("crypto");
 const { Client } = require("ldapts");
 
 const useMasterKey = true;
@@ -88,7 +88,7 @@ async function init() {
             // This will also delete all sessions of the user
 
             // Create a random password:
-            const token = crypto.randomBytes(64).toString("hex");
+            const token = cryptolib.randomBytes(64).toString("hex");
 
             // Set the password and save the user
             user.set("password", token);
@@ -118,7 +118,7 @@ async function init() {
       }
 
       // Create a random password:
-      const token = crypto.randomBytes(64).toString("hex");
+      const token = cryptolib.randomBytes(64).toString("hex");
 
       // Lookup user in Parse
       const query = new Parse.Query(Parse.User).equalTo("username", user.username);
