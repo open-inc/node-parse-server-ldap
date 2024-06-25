@@ -8,55 +8,71 @@ npm i @openinc/parse-server-ldap
 
 ## Usage
 
-In your Cloud Code entry file:
+Init LDAP plugin in a js file that will be loaded by Cloud Code.
+Example:
 
 ```js
-const initLDAP = require("@openinc/parse-server-ldap");
+const init = async () => {
+  console.log("Init LDAP Plugin.");
+  const initLDAP = require("@openinc/parse-server-ldap");
+  initLDAP(Parse);
+};
 
-initLDAP(Parse);
+module.exports.init = init;
 ```
 
 ## Configuration
 
-Configuration is done using environment variables:
+1. Before using you should create a column (type string) in the **\_User** table in parse. The name of the column should be equal to `PARSE_LDAP_PARSE_LDAP_DN_ATTRIBUTE`.
+2. When using a docker environment and **docker-parse-server-opendash** you have to add a env variable to the docker compose for service **parse**
+   - `OPENINC_PARSE_ADDITIONAL_PACKAGES: '@openinc/parse-server-ldap'`
+   - Refer to https://github.com/open-inc/docker-parse-server-opendash
+3. Add the env variables and volumes to load custom cloud code when running a docker environment
+   - Add to environment section in **parse service**: `OPENINC_PARSE_CLOUDCODE_AUTOLOAD_DIR: './cloud-custom'`
+   - Add to volumes section in **parse service**: `./cloud:/usr/src/app/cloud-custom`
+4. Configuration is done using environment variables:
+   - `PARSE_LDAP_FUNCTION_NAME` (default: "ldap_login") will be passed to `Parse.Cloud.define(PARSE_LDAP_FUNCTION_NAME)`
+   - `PARSE_LDAP_URL` (default: "ldap://127.0.0.1:389") should be set to the LDAP server connection URL
+   - `PARSE_LDAP_BASEPATH` should be set to a base path, i.e.: `"dc=example,dc=com"`
+   - `PARSE_LDAP_LOGIN_BIND_DN` must be set to a DN which will identify the user, i.e.: `"uid=%user%,ou=Users,%basepath%"`.
+     - `%user%` will be replaced by the username the user is providing to the Cloud Code Function
+     - `%userWithoutDomain%` same as `%user%`, but will strip the domain part, i.e.: `domain.com\username` will become `username`
+     - `%basepath%` will be replaced by the value of `PARSE_LDAP_BASEPATH`
 
-- `PARSE_LDAP_FUNCTION_NAME` (default: "ldap_login") will be passed to `Parse.Cloud.define(PARSE_LDAP_FUNCTION_NAME)`
-- `PARSE_LDAP_URL` (default: "ldap://127.0.0.1:389") should be set to the LDAP server connection URL
-- `PARSE_LDAP_BASEPATH` should be set to a base path, i.e.: `"dc=example,dc=com"`
-- `PARSE_LDAP_LOGIN_BIND_DN` must be set to a DN which will identify the user, i.e.: `"uid=%user%,ou=Users,%basepath%"`.
-  - `%user%` will be replaced by the username the user is providing to the Cloud Code Function
-  - `%userWithoutDomain%` same as `%user%`, but will strip the domain part, i.e.: `domain.com\username` will become `username`
-  - `%basepath%` will be replaced by the value of `PARSE_LDAP_BASEPATH`
+### Procedure of binding a user aka authenticating a user against ldap
 
-### Bind DN mapping
+Typically, users are authenticated (bind-method) using a service user. The service user searches for the username/email address provided by the login form, returns retrieved information, then the user is authenticated using the password. In most cases you want to map to the DN of a user. In this case, do not set `PARSE_LDAP_LOGIN_BIND_MAP_ATTRIBUTE` and `PARSE_LDAP_LOGIN_BIND_MAP_TO`. The following steps explain this process in detail:
 
-Optionally you can map the bind DN to another using a service user. Lets say the user want's to login with an email, but bind will only support login by DN. The mapping is done in a couple of steps:
+1. The service user will bind to LDAP.
+   - `PARSE_LDAP_SERVICE_USER_DN` DN for the service user
+   - `PARSE_LDAP_SERVICE_USER_PW` PW for the service user
+2. LDAP search will be executed.
 
-1. The service user will bind to ldap
-2. A search will be performed, using `PARSE_LDAP_LOGIN_BIND_DN` as a path and `PARSE_LDAP_LOGIN_BIND_MAP_FILTER` as a filter.
-3. An output parameter will be selected from the first result using `PARSE_LDAP_LOGIN_BIND_MAP_ATTRIBUTE`
-4. The output paramter will be passed to `PARSE_LDAP_LOGIN_BIND_MAP_TO` to create a new bind path.
-5. The new bind path will be used together with the password from the user to validate the login
+   - `PARSE_LDAP_LOGIN_BIND_DN` as path
+   - `PARSE_LDAP_LOGIN_BIND_MAP_FILTER` as filter (i.e.: `"(mail=%user%)"` or `(&(objectClass=user)(sAMAccountName=%user%))` or anything you want to filter about)
+     - `%user%` will be replaced by the username the user entered
+     - `%userWithoutDomain%` same as `%user%` but will strip the domain part, i.e.: `domain.com\username` will become `username`
+     - `%basepath%` will be replaced by the value of `PARSE_LDAP_BASEPATH`
 
-- `PARSE_LDAP_LOGIN_BIND_MAP_FILTER` must be set to perform a bind DN mapping, i.e.: `"(mail=%user%)"`.
-  - `%user%` will be replaced by the username the user is providing to the Cloud Code Function
-  - `%userWithoutDomain%` same as `%user%`, but will strip the domain part, i.e.: `domain.com\username` will become `username`
-  - `%basepath%` will be replaced by the value of `PARSE_LDAP_BASEPATH`
-- `PARSE_LDAP_LOGIN_BIND_MAP_ATTRIBUTE` (default: "dn") can be set to perform a bind DN mapping.
-- `PARSE_LDAP_LOGIN_BIND_MAP_TO` (default: "%output%") can be set to perform a bind DN mapping.
-  - `%output%` will be replaced by output parameter described above
-  - `%user%` will be replaced by the username the user is providing to the Cloud Code Function
-  - `%userWithoutDomain%` same as `%user%`, but will strip the domain part, i.e.: `domain.com\username` will become `username`
-  - `%basepath%` will be replaced by the value of `PARSE_LDAP_BASEPATH`
-- `PARSE_LDAP_SERVICE_USER_DN` DN for the service user
-  - `%basepath%` will be replaced by the value of `PARSE_LDAP_BASEPATH`
-- `PARSE_LDAP_SERVICE_USER_PW` PW for the service user
+3. An output parameter will be selected from the first result.
 
-In most cases you want to map to the DN of an user. In this case do not set `PARSE_LDAP_LOGIN_BIND_MAP_ATTRIBUTE` and `PARSE_LDAP_LOGIN_BIND_MAP_TO`.
+   - `PARSE_LDAP_LOGIN_BIND_MAP_ATTRIBUTE` (default: "dn")
+
+4. An attribute is selected from the output provided by the env variable.
+
+   - `PARSE_LDAP_LOGIN_BIND_MAP_TO` (default: "%output%")
+     - `%output%` will be replaced by the output parameter described above
+     - `%user%` will be replaced by the username the user is providing to the Cloud Code Function
+     - `%userWithoutDomain%` same as `%user%`, but will strip the domain part, i.e.: `domain.com\username` will become `username`
+     - `%basepath%` will be replaced by the value of `PARSE_LDAP_BASEPATH`
+
+5. The new bind path will be used together with the password from the user to validate the login.
 
 ### User profile search
 
-After binding the user, the user profile will be searched. This is done by using `PARSE_LDAP_LOGIN_BIND_DN`. If this will not work for you, you can search for the user within a DN with a given filter:
+After binding the user, the user profile will be searched.
+This is done by using `PARSE_LDAP_LOGIN_BIND_DN`.
+If this will not work for you, you can search for the user within a DN with a given filter:
 
 - `PARSE_LDAP_LOGIN_SEARCH_DN`
   - `%user%` will be replaced by the username the user is providing to the Cloud Code Function
