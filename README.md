@@ -31,6 +31,7 @@ module.exports.init = init;
    - Add to environment section in **parse service**: `OPENINC_PARSE_CLOUDCODE_AUTOLOAD_DIR: './cloud-custom'`
    - Add to volumes section in **parse service**: `./cloud:/usr/src/app/cloud-custom`
 4. Configuration is done using environment variables:
+   - `PARSE_LDAP_LOGIN_SEARCH_SCOPE`: **You probably want to set this to 'sub'** otherwise only `PARSE_LDAP_LOGIN_BIND_DN` will be searched but not its subordinates
    - `PARSE_LDAP_FUNCTION_NAME` (default: "ldap_login") will be passed to `Parse.Cloud.define(PARSE_LDAP_FUNCTION_NAME)`
    - `PARSE_LDAP_URL` (default: "ldap://127.0.0.1:389") should be set to the LDAP server connection URL
    - `PARSE_LDAP_BASEPATH` should be set to a base path, i.e.: `"dc=example,dc=com"`
