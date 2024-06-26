@@ -1,5 +1,5 @@
-const cryptolib = require("crypto");
-const { Client } = require("ldapts");
+import cryptolib from "crypto";
+import { Client } from "ldapts";
 
 const useMasterKey = true;
 
@@ -11,12 +11,14 @@ const PARSE_LDAP_URL = process.env.PARSE_LDAP_URL || "ldap://127.0.0.1:389";
 const PARSE_LDAP_BASEPATH = process.env.PARSE_LDAP_BASEPATH || "";
 const PARSE_LDAP_LOGIN_BIND_DN = process.env.PARSE_LDAP_LOGIN_BIND_DN || "";
 const PARSE_LDAP_LOGIN_BIND_MAP_FILTER = process.env.PARSE_LDAP_LOGIN_BIND_MAP_FILTER;
-const PARSE_LDAP_LOGIN_BIND_MAP_SCOPE = process.env.PARSE_LDAP_LOGIN_BIND_MAP_SCOPE || "sub";
+const PARSE_LDAP_LOGIN_BIND_MAP_SCOPE: "base" | "children" | "one" | "sub" | undefined =
+  (process.env.PARSE_LDAP_LOGIN_BIND_MAP_SCOPE as "base" | "children" | "one" | "sub" | undefined) || "sub";
 const PARSE_LDAP_LOGIN_BIND_MAP_ATTRIBUTE = process.env.PARSE_LDAP_LOGIN_BIND_MAP_ATTRIBUTE || "dn";
 const PARSE_LDAP_LOGIN_BIND_MAP_TO = process.env.PARSE_LDAP_LOGIN_BIND_MAP_TO || "%output%";
 const PARSE_LDAP_LOGIN_SEARCH_DN = process.env.PARSE_LDAP_LOGIN_SEARCH_DN;
 const PARSE_LDAP_LOGIN_SEARCH_FILTER = process.env.PARSE_LDAP_LOGIN_SEARCH_FILTER;
-const PARSE_LDAP_LOGIN_SEARCH_SCOPE = process.env.PARSE_LDAP_LOGIN_SEARCH_SCOPE || "sub";
+const PARSE_LDAP_LOGIN_SEARCH_SCOPE: "sub" | "base" | "children" | "one" | undefined =
+  (process.env.PARSE_LDAP_LOGIN_SEARCH_SCOPE as "sub" | "base" | "children" | "one" | undefined) || "sub";
 
 const PARSE_LDAP_DN_ATTRIBUTE = process.env.PARSE_LDAP_DN_ATTRIBUTE || "dn";
 const PARSE_LDAP_USERNAME_ATTRIBUTE = process.env.PARSE_LDAP_USERNAME_ATTRIBUTE || "uid";
@@ -207,16 +209,19 @@ async function validateCredentials(username: string, password: string) {
     });
 
     if (searchEntries.length !== 1) {
+      searchEntries.forEach((entry) => {
+        console.log(entry[PARSE_LDAP_DN_ATTRIBUTE]);
+      });
       throw new Error(`Invalid Search Entries Length: ${searchEntries.length}`);
     }
 
     return {
       dn: searchEntries[0][PARSE_LDAP_DN_ATTRIBUTE],
       email: PARSE_LDAP_UNIFY_CREDENTIALS
-        ? searchEntries[0][PARSE_LDAP_EMAIL_ATTRIBUTE]?.toLowerCase().trim()
+        ? getTypedAttribute(searchEntries[0][PARSE_LDAP_EMAIL_ATTRIBUTE]).toLowerCase().trim()
         : searchEntries[0][PARSE_LDAP_EMAIL_ATTRIBUTE],
       username: PARSE_LDAP_UNIFY_CREDENTIALS
-        ? searchEntries[0][PARSE_LDAP_USERNAME_ATTRIBUTE]?.toLowerCase().trim()
+        ? getTypedAttribute(searchEntries[0][PARSE_LDAP_USERNAME_ATTRIBUTE]).toLowerCase().trim()
         : searchEntries[0][PARSE_LDAP_USERNAME_ATTRIBUTE],
       name: searchEntries[0][PARSE_LDAP_NAME_ATTRIBUTE],
     };
@@ -253,7 +258,7 @@ async function getBindPath(params: Record<string, string>) {
 
     const attribute = user[PARSE_LDAP_LOGIN_BIND_MAP_ATTRIBUTE];
 
-    return replaceParams(PARSE_LDAP_LOGIN_BIND_MAP_TO, { ...params, output: attribute });
+    return replaceParams(PARSE_LDAP_LOGIN_BIND_MAP_TO, { ...params, output: getTypedAttribute(attribute) });
   } catch (error) {
     throw error;
   } finally {
@@ -261,7 +266,7 @@ async function getBindPath(params: Record<string, string>) {
   }
 }
 
-async function validateGroupMember(dn: string) {
+async function validateGroupMember(dn: string | string[] | Buffer | Buffer[]): Promise<boolean> {
   const client = new Client({ url: PARSE_LDAP_URL });
 
   try {
@@ -287,8 +292,9 @@ async function validateGroupMember(dn: string) {
       throw new Error(`Group '${PARSE_LDAP_SERVICE_GROUP_DN}' has no member`);
     }
 
-    if (Array.isArray(group.member)) {
-      return group.member.includes(dn);
+    if (Array.isArray(group.member) && !Array.isArray(dn)) {
+      // @ts-ignore
+      return group.member.includes(dn.toString());
     } else {
       return group.member === dn;
     }
@@ -331,6 +337,33 @@ async function getValidGroupMembers() {
   } finally {
     await client.unbind();
   }
+}
+
+function getTypedAttribute(attribute: string | string[] | Buffer | Buffer[]): string {
+  let typedAttribute = "";
+
+  if (typeof attribute === "undefined") {
+    return typedAttribute;
+  }
+
+  if (attribute instanceof Array && attribute.length > 0) {
+    if (attribute instanceof Buffer) {
+      typedAttribute = attribute[0].toString();
+    }
+
+    if (typeof attribute === "string") {
+      typedAttribute = attribute[0];
+    }
+  }
+
+  if (attribute instanceof Buffer) {
+    typedAttribute = attribute.toString();
+  }
+
+  if (typeof attribute === "string") {
+    typedAttribute = attribute;
+  }
+  return typedAttribute;
 }
 
 function replaceParams(input: string, params: Record<string, string>): string {
