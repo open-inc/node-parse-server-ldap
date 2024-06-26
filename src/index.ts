@@ -1,5 +1,5 @@
-import cryptolib from "crypto";
-import { Client } from "ldapts";
+const cryptolib = require("crypto");
+const { Client } = require("ldapts");
 
 const useMasterKey = true;
 
@@ -209,7 +209,7 @@ async function validateCredentials(username: string, password: string) {
     });
 
     if (searchEntries.length !== 1) {
-      searchEntries.forEach((entry) => {
+      searchEntries.forEach((entry: any) => {
         console.log(entry[PARSE_LDAP_DN_ATTRIBUTE]);
       });
       throw new Error(`Invalid Search Entries Length: ${searchEntries.length}`);

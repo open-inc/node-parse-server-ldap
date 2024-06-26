@@ -22,5 +22,5 @@
   "prettier": {
     "printWidth": 120
   },
-  "type": "module"
+  "type": "commonjs"
 }
