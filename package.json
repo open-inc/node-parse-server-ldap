@@ -10,7 +10,7 @@
   "license": "MIT",
   "scripts": {
     "build": "tsc",
-    "prepublish": "npm run build"
+    "prepublish": "pnpm run build"
   },
   "dependencies": {
     "ldapts": "4.2.6"
@@ -22,5 +22,6 @@
   "prettier": {
     "printWidth": 120
   },
-  "type": "commonjs"
+  "type": "commonjs",
+  "packageManager": "pnpm@9.4.0"
 }
