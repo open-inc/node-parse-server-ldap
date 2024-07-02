@@ -208,22 +208,45 @@ async function validateCredentials(username: string, password: string) {
       ],
     });
 
-    if (searchEntries.length !== 1) {
-      searchEntries.forEach((entry: any) => {
+    //Filter out entries without dn
+    let searchResult = searchEntries.filter((entry: any) => {
+      // Check if entry[PARSE_LDAP_DN_ATTRIBUTE] is an array.
+      // If so, check if the array is not empty.
+
+      if (Array.isArray(entry[PARSE_LDAP_DN_ATTRIBUTE]) && entry[PARSE_LDAP_DN_ATTRIBUTE].length > 0) {
+        return true;
+      }
+
+      // Check if entry[PARSE_LDAP_DN_ATTRIBUTE] is a string.
+      // If so, check if the string is not empty.
+
+      if (typeof entry[PARSE_LDAP_DN_ATTRIBUTE] === "string" && entry[PARSE_LDAP_DN_ATTRIBUTE].length > 0) {
+        return true;
+      }
+
+      return false;
+    });
+
+    // Log if searchResult is not 1
+    if (searchResult.length !== 1) {
+      console.log("Search entries is not 1.");
+      searchResult.forEach((entry: any) => {
         console.log(entry[PARSE_LDAP_DN_ATTRIBUTE]);
       });
-      throw new Error(`Invalid Search Entries Length: ${searchEntries.length}`);
+
+      // Throw error
+      throw new Error(`Invalid Search Entries Length: ${searchResult.length}`);
     }
 
     return {
-      dn: searchEntries[0][PARSE_LDAP_DN_ATTRIBUTE],
+      dn: searchResult[0][PARSE_LDAP_DN_ATTRIBUTE],
       email: PARSE_LDAP_UNIFY_CREDENTIALS
-        ? getTypedAttribute(searchEntries[0][PARSE_LDAP_EMAIL_ATTRIBUTE]).toLowerCase().trim()
-        : searchEntries[0][PARSE_LDAP_EMAIL_ATTRIBUTE],
+        ? getTypedAttribute(searchResult[0][PARSE_LDAP_EMAIL_ATTRIBUTE]).toLowerCase().trim()
+        : searchResult[0][PARSE_LDAP_EMAIL_ATTRIBUTE],
       username: PARSE_LDAP_UNIFY_CREDENTIALS
-        ? getTypedAttribute(searchEntries[0][PARSE_LDAP_USERNAME_ATTRIBUTE]).toLowerCase().trim()
-        : searchEntries[0][PARSE_LDAP_USERNAME_ATTRIBUTE],
-      name: searchEntries[0][PARSE_LDAP_NAME_ATTRIBUTE],
+        ? getTypedAttribute(searchResult[0][PARSE_LDAP_USERNAME_ATTRIBUTE]).toLowerCase().trim()
+        : searchResult[0][PARSE_LDAP_USERNAME_ATTRIBUTE],
+      name: searchResult[0][PARSE_LDAP_NAME_ATTRIBUTE],
     };
   } catch (error) {
     throw error;
