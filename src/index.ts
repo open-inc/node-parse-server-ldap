@@ -143,7 +143,7 @@ async function init() {
           sessionToken,
           user: user_a,
           restricted: false,
-          //expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365),
+          expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365),
           installationId: request.installationId,
           createdWith: {
             action: "login",
