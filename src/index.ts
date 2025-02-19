@@ -32,6 +32,9 @@ const PARSE_LDAP_SERVICE_USER_DN = process.env.PARSE_LDAP_SERVICE_USER_DN || "";
 const PARSE_LDAP_SERVICE_USER_PW = process.env.PARSE_LDAP_SERVICE_USER_PW || "";
 const PARSE_LDAP_SERVICE_GROUP_DN = process.env.PARSE_LDAP_SERVICE_GROUP_DN || "";
 const PARSE_LDAP_SERVICE_INTERVAL = parseInt(process.env.PARSE_LDAP_SERVICE_INTERVAL || "");
+const PARSE_LDAP_EXPIRE_LENGTH = process.env.PARSE_LDAP_EXPIRE_LENGTH
+  ? new Date(Date.now() + Number(process.env.PARSE_LDAP_EXPIRE_LENGTH) * 1000)
+  : new Date(Date.now() + 1000 * 60 * 60 * 24 * 365);
 
 const PARSE_LDAP_UNIFY_CREDENTIALS = process.env.PARSE_LDAP_UNIFY_CREDENTIALS === "true";
 
@@ -143,7 +146,7 @@ async function init() {
           sessionToken,
           user: user_a,
           restricted: false,
-          expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365),
+          expiresAt: PARSE_LDAP_EXPIRE_LENGTH,
           installationId: request.installationId,
           createdWith: {
             action: "login",
