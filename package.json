@@ -2,26 +2,66 @@
   "name": "@openinc/parse-server-ldap",
   "version": "0.6.7",
   "description": "Parse Server Cloud Code to authenticate with LDAP/AD",
+  "packageManager": "pnpm@10.11.1",
+  "type": "module",
   "keywords": [
     "parse",
     "ldap"
   ],
-  "main": "lib/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/open-inc/node-parse-server-ldap.git"
+  },
+  "main": "dist/index.js",
   "license": "MIT",
+  "release": {
+    "branches": [
+      "master"
+    ],
+    "repositoryUrl": "https://github.com/open-inc/node-parse-server-ldap.git",
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      "@semantic-release/changelog",
+      "@semantic-release/npm",
+      "@semantic-release/github",
+      "semantic-release-export-data"
+    ],
+    "prepare": [
+      "@semantic-release/changelog",
+      "@semantic-release/npm",
+      {
+        "path": "@semantic-release/git",
+        "assets": [
+          "package.json",
+          "pnpm-lock.json",
+          "CHANGELOG.md"
+        ],
+        "message": "chore(release): Release ${nextRelease.version} \n\n${nextRelease.notes}"
+      }
+    ]
+  },
   "scripts": {
-    "build": "tsc",
-    "prepublish": "pnpm run build"
+    "build": "tsc"
   },
   "dependencies": {
-    "ldapts": "4.2.6"
+    "ldapts": "8.0.1",
+    "semantic-release": "^24.2.5"
   },
   "devDependencies": {
+    "@types/node": "^22.15.29",
     "@types/parse": "^3.0.9",
-    "typescript": "^5.4.5"
+    "typescript": "^5.8.3",
+    "semantic-release-export-data": "^1.1.0",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/exec": "^7.1.0",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^11.0.3",
+    "@semantic-release/npm": "^12.0.1",
+    "@semantic-release/release-notes-generator": "^14.0.3"
   },
   "prettier": {
     "printWidth": 120
-  },
-  "type": "commonjs",
-  "packageManager": "pnpm@9.4.0"
+  }
 }

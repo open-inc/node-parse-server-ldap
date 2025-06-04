@@ -1,9 +1,7 @@
-const cryptolib = require("crypto");
-const { Client } = require("ldapts");
+import cryptolib from "crypto";
+import { Client } from "ldapts";
 
 const useMasterKey = true;
-
-module.exports = init;
 
 const PARSE_LDAP_FUNCTION_NAME = process.env.PARSE_LDAP_FUNCTION_NAME || "ldap_login";
 
@@ -38,7 +36,7 @@ let PARSE_LDAP_EXPIRE_LENGTH = process.env.PARSE_LDAP_EXPIRE_LENGTH
 
 const PARSE_LDAP_UNIFY_CREDENTIALS = process.env.PARSE_LDAP_UNIFY_CREDENTIALS === "true";
 
-async function init() {
+export async function init() {
   if (!PARSE_LDAP_URL) {
     console.log("Parse LDAP Plugin is not active. PARSE_LDAP_URL is required.");
     return;
@@ -115,7 +113,7 @@ async function init() {
       const user = await validateCredentials(username, password);
 
       if (PARSE_LDAP_SERVICE_USER_DN && PARSE_LDAP_SERVICE_USER_PW && PARSE_LDAP_SERVICE_GROUP_DN) {
-        const isAuthorized = await validateGroupMember(user.dn);
+        const isAuthorized = await validateGroupMember(user.dn ? user.dn : user.username ? user.username : "");
 
         if (!isAuthorized) {
           throw new Parse.Error(101, "Invalid username/password.");
@@ -243,15 +241,25 @@ async function validateCredentials(username: string, password: string) {
       throw new Error(`Invalid Search Entries Length: ${searchResult.length}`);
     }
 
+    const usedSearchResult = searchResult[0];
+
+    if (usedSearchResult === undefined) {
+      throw new Error("No search result found.");
+    }
+
     return {
-      dn: searchResult[0][PARSE_LDAP_DN_ATTRIBUTE],
+      dn: usedSearchResult[PARSE_LDAP_DN_ATTRIBUTE],
       email: PARSE_LDAP_UNIFY_CREDENTIALS
-        ? getTypedAttribute(searchResult[0][PARSE_LDAP_EMAIL_ATTRIBUTE]).toLowerCase().trim()
-        : searchResult[0][PARSE_LDAP_EMAIL_ATTRIBUTE],
+        ? usedSearchResult[PARSE_LDAP_EMAIL_ATTRIBUTE]
+          ? getTypedAttribute(usedSearchResult[PARSE_LDAP_EMAIL_ATTRIBUTE]).toLowerCase().trim()
+          : ""
+        : usedSearchResult[PARSE_LDAP_EMAIL_ATTRIBUTE],
       username: PARSE_LDAP_UNIFY_CREDENTIALS
-        ? getTypedAttribute(searchResult[0][PARSE_LDAP_USERNAME_ATTRIBUTE]).toLowerCase().trim()
-        : searchResult[0][PARSE_LDAP_USERNAME_ATTRIBUTE],
-      name: searchResult[0][PARSE_LDAP_NAME_ATTRIBUTE],
+        ? usedSearchResult[PARSE_LDAP_USERNAME_ATTRIBUTE]
+          ? getTypedAttribute(usedSearchResult[PARSE_LDAP_USERNAME_ATTRIBUTE]).toLowerCase().trim()
+          : ""
+        : usedSearchResult[PARSE_LDAP_USERNAME_ATTRIBUTE],
+      name: usedSearchResult[PARSE_LDAP_NAME_ATTRIBUTE],
     };
   } catch (error) {
     throw error;
@@ -285,6 +293,10 @@ async function getBindPath(params: Record<string, string>) {
     }
 
     const attribute = user[PARSE_LDAP_LOGIN_BIND_MAP_ATTRIBUTE];
+
+    if (!attribute) {
+      throw new Error(`Attribute '${PARSE_LDAP_LOGIN_BIND_MAP_ATTRIBUTE}' Not Found in User: ${user}`);
+    }
 
     return replaceParams(PARSE_LDAP_LOGIN_BIND_MAP_TO, { ...params, output: getTypedAttribute(attribute) });
   } catch (error) {
@@ -376,7 +388,7 @@ function getTypedAttribute(attribute: string | string[] | Buffer | Buffer[]): st
 
   if (attribute instanceof Array && attribute.length > 0) {
     if (attribute instanceof Buffer) {
-      typedAttribute = attribute[0].toString();
+      typedAttribute = attribute[0] ? attribute[0].toString() : "";
     }
 
     if (typeof attribute === "string") {

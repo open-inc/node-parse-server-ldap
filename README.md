@@ -3,7 +3,7 @@
 ## Installation
 
 ```
-npm i @openinc/parse-server-ldap
+pnpm i @openinc/parse-server-ldap
 ```
 
 ## Usage
@@ -15,6 +15,19 @@ Example:
 const init = async () => {
   console.log("Init LDAP Plugin.");
   const initLDAP = require("@openinc/parse-server-ldap");
+  initLDAP(Parse);
+};
+
+module.exports.init = init;
+```
+
+or as ESM:
+
+```js
+import { init as initLDAP } from "@openinc/parse-server-ldap";
+
+const init = async () => {
+  console.log("Init LDAP Plugin.");
   initLDAP(Parse);
 };
 
