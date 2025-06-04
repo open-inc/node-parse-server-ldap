@@ -1,22 +1,38 @@
-name: Publish to npm
+name: Create release and publish to npm
 on:
   push:
-    tags:
-      - "v[0-9]+.[0-9]+.[0-9]+"
+    branches:
+      - master
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 18
-          registry-url: "https://registry.npmjs.org"
+          node-version: 22
+          registry-url: "https://registry.npmjs.org/"
+
       - uses: pnpm/action-setup@v4
-        with:
-          version: 9.4.0
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm run build
-      - run: pnpm publish --no-git-checks
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build the project
+        run: pnpm run build
+
+      - name: Semantic Release 🚀
+        id: semantic
+        run: npx semantic-release --branches master
         env:
+          GH_TOKEN: ${{ secrets.OPENINC_SEMANTIC_RELEASE }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_ORG_OPENINC }}
