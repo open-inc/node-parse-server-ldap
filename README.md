@@ -14,6 +14,7 @@ Example:
 ```js
 const init = async () => {
   console.log("Init LDAP Plugin.");
+
   const initLDAP = require("@openinc/parse-server-ldap");
   initLDAP(Parse);
 };
