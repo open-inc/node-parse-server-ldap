@@ -36,6 +36,8 @@ let PARSE_LDAP_EXPIRE_LENGTH = process.env.PARSE_LDAP_EXPIRE_LENGTH
 
 const PARSE_LDAP_UNIFY_CREDENTIALS = process.env.PARSE_LDAP_UNIFY_CREDENTIALS === "true";
 
+const PARSE_LDAP_DEFAULT_TENANT_ID = process.env.PARSE_LDAP_DEFAULT_TENANT_ID || undefined;
+
 export async function init() {
   if (!PARSE_LDAP_URL) {
     console.log("Parse LDAP Plugin is not active. PARSE_LDAP_URL is required.");
@@ -168,6 +170,12 @@ export async function init() {
       user_c.set(PARSE_LDAP_PARSE_LDAP_ATTRIBUTE, true);
       user_c.set(PARSE_LDAP_PARSE_LDAP_DN_ATTRIBUTE, user.dn);
       user_c.set("password", token);
+
+      if (PARSE_LDAP_DEFAULT_TENANT_ID !== undefined) {
+        const tenant = new Parse.Object("OD3_Tenant");
+        tenant.id = PARSE_LDAP_DEFAULT_TENANT_ID;
+        user_c.set("tenant", tenant);
+      }
 
       await user_c.signUp();
 
