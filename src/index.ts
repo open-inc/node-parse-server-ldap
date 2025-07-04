@@ -171,7 +171,7 @@ export async function init() {
 
       await user_c.signUp();
 
-      const user_b = await Parse.User.logIn(user.username, token);
+      const user_b = await Parse.User.logIn(user.username as string, token);
 
       return { ...user, session: user_b.getSessionToken() };
     } catch (error) {
