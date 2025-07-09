@@ -35,6 +35,10 @@ let PARSE_LDAP_EXPIRE_LENGTH = process.env.PARSE_LDAP_EXPIRE_LENGTH
   : new Date(Date.now() + 1000 * 60 * 60 * 24 * 365);
 
 const PARSE_LDAP_UNIFY_CREDENTIALS = process.env.PARSE_LDAP_UNIFY_CREDENTIALS === "true";
+const PARSE_LDAP_DEFAULT_TENANT_ID = process.env.PARSE_LDAP_DEFAULT_TENANT_ID || undefined;
+const PARSE_LDAP_REJECT_UNAUTHORIZED = process.env.PARSE_LDAP_REJECT_UNAUTHORIZED === "true";
+
+const clientOptions = PARSE_LDAP_REJECT_UNAUTHORIZED ? {url: PARSE_LDAP_URL} : {url: PARSE_LDAP_URL, tlsOptions: {rejectUnauthorized: false}};
 
 export async function init() {
   if (!PARSE_LDAP_URL) {
@@ -169,9 +173,17 @@ export async function init() {
       user_c.set(PARSE_LDAP_PARSE_LDAP_DN_ATTRIBUTE, user.dn);
       user_c.set("password", token);
 
+      if (PARSE_LDAP_DEFAULT_TENANT_ID !== undefined) {
+        const tenant = new Parse.Object("OD3_Tenant");
+        tenant.id = PARSE_LDAP_DEFAULT_TENANT_ID;
+        user_c.set("tenant", tenant);
+      }
+
       await user_c.signUp();
 
-      return { ...user, session: user_c.getSessionToken() };
+      const user_b = await Parse.User.logIn(user.username as string, token);
+
+      return { ...user, session: user_b.getSessionToken() };
     } catch (error) {
       console.error(error);
 
@@ -181,7 +193,7 @@ export async function init() {
 }
 
 async function validateCredentials(username: string, password: string) {
-  const client = new Client({ url: PARSE_LDAP_URL });
+  const client = new Client(clientOptions);
 
   try {
     const user = username;
@@ -273,7 +285,7 @@ async function getBindPath(params: Record<string, string>) {
     return replaceParams(PARSE_LDAP_LOGIN_BIND_DN, params);
   }
 
-  const client = new Client({ url: PARSE_LDAP_URL });
+  const client = new Client(clientOptions);
 
   try {
     await client.bind(
@@ -307,7 +319,7 @@ async function getBindPath(params: Record<string, string>) {
 }
 
 async function validateGroupMember(dn: string | string[] | Buffer | Buffer[]): Promise<boolean> {
-  const client = new Client({ url: PARSE_LDAP_URL });
+  const client = new Client(clientOptions);
 
   try {
     await client.bind(
@@ -346,7 +358,7 @@ async function validateGroupMember(dn: string | string[] | Buffer | Buffer[]): P
 }
 
 async function getValidGroupMembers() {
-  const client = new Client({ url: PARSE_LDAP_URL });
+  const client = new Client(clientOptions);
 
   try {
     await client.bind(
