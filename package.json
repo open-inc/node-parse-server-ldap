@@ -2,7 +2,7 @@
   "name": "@openinc/parse-server-ldap",
   "version": "0.6.8",
   "description": "Parse Server Cloud Code to authenticate with LDAP/AD",
-  "packageManager": "pnpm@10.11.1",
+  "packageManager": "pnpm@10.12.4",
   "type": "module",
   "keywords": [
     "parse",
@@ -45,11 +45,11 @@
     "build": "tsc"
   },
   "dependencies": {
-    "ldapts": "8.0.1",
-    "semantic-release": "^24.2.5"
+    "ldapts": "8.0.4",
+    "semantic-release": "^24.2.6"
   },
   "devDependencies": {
-    "@types/node": "^22.15.29",
+    "@types/node": "^24.0.10",
     "@types/parse": "^3.0.9",
     "typescript": "^5.8.3",
     "semantic-release-export-data": "^1.1.0",
@@ -58,7 +58,7 @@
     "@semantic-release/exec": "^7.1.0",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^11.0.3",
-    "@semantic-release/npm": "^12.0.1",
+    "@semantic-release/npm": "^12.0.2",
     "@semantic-release/release-notes-generator": "^14.0.3"
   },
   "prettier": {
