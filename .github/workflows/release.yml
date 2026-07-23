@@ -1,0 +1,62 @@
+name: Create Release
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      packages: write
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v5
+
+      - name: Setup Node
+        id: setup-node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 25
+          registry-url: "https://registry.npmjs.org/"
+          scope: "@openinc"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build the project
+        run: pnpm run build
+
+      - name: Verify the integrity of provenance attestations and registry signatures for installed dependencies
+        run: pnpm audit signatures --ignore-registry-errors
+
+      - name: Semantic Release 🚀
+        id: semantic
+        uses: cycjimmy/semantic-release-action@v6
+        with:
+          semantic_version: 25
+          branches: master
+          extra_plugins: |
+            @semantic-release/changelog@^7
+            @semantic-release/commit-analyzer@^13
+            @semantic-release/git@^11
+            @semantic-release/github@^12
+            @semantic-release/npm@^13
+            @semantic-release/release-notes-generator@^14
+            semantic-release-export-data@^1
+        env:
+          GITHUB_TOKEN: ${{ secrets.OPENINC_SEMANTIC_RELEASE }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN_ORG_OPENINC }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_ORG_OPENINC }}
