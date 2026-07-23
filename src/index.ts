@@ -1,5 +1,6 @@
 import cryptolib from "crypto";
 import { Client } from "ldapts";
+import Parse from "parse/node";
 
 const useMasterKey = true;
 
