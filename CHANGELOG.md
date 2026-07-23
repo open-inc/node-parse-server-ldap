@@ -1,3 +1,29 @@
+# [1.0.0](https://github.com/open-inc/node-parse-server-ldap/compare/v0.7.0...v1.0.0) (2026-07-23)
+
+
+* feat!: Repair build, drop CVE-carrying parse dependency, modernize release ([191067c](https://github.com/open-inc/node-parse-server-ldap/commit/191067c24a0b12b7a1ac1bde0b35b3757fc579a6))
+
+
+### Bug Fixes
+
+* Add npmrc ([579a724](https://github.com/open-inc/node-parse-server-ldap/commit/579a724a7036343fdf6eb3a11407fde1369f95b3))
+
+
+### Features
+
+* Repair build, drop CVE-carrying parse dependency, modernize release ([37166a0](https://github.com/open-inc/node-parse-server-ldap/commit/37166a0c14d011410fd5f939d4b42c0fbb8d9ca3))
+
+
+### BREAKING CHANGES
+
+* parse is now a peerDependency instead of a bundled dependency. Consumers must provide parse themselves (any Parse Server host already does). This also cuts the transitive ws vulnerabilities from the published package.
+* parse is now a peerDependency instead of a bundled
+dependency. Consumers must provide parse themselves (any Parse Server
+host already does). This also cuts the transitive ws vulnerabilities
+from the published package.
+
+Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
+
 # [0.7.0](https://github.com/open-inc/node-parse-server-ldap/compare/v0.6.8...v0.7.0) (2025-07-04)
 
 
