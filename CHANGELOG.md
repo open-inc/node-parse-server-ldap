@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/open-inc/node-parse-server-ldap/compare/v1.0.0...v1.0.1) (2026-11-10)
+
+
+### Bug Fixes
+
+* Use host Parse instance and document ESM-only usage ([5580f2f](https://github.com/open-inc/node-parse-server-ldap/commit/5580f2fdac38eff88b53b4a37268f3972101d8ba))
+
 # [1.0.0](https://github.com/open-inc/node-parse-server-ldap/compare/v0.7.0...v1.0.0) (2026-07-23)
 
 
