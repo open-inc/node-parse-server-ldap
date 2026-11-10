@@ -8,28 +8,29 @@ pnpm i @openinc/parse-server-ldap
 
 ## Usage
 
-Init LDAP plugin in a js file that will be loaded by Cloud Code.
-Example:
+This package is ESM-only. It cannot be loaded with `require()`.
 
-```js
-const init = async () => {
-  console.log("Init LDAP Plugin.");
+Init the LDAP plugin in a js file that will be loaded by Cloud Code and pass the Parse instance of your Parse Server (the global `Parse` in Cloud Code). If no instance is passed, the plugin falls back to `globalThis.Parse`.
 
-  const { init: initLDAP } = require("@openinc/parse-server-ldap");
-  initLDAP(Parse);
-};
-
-module.exports.init = init;
-```
-
-or as ESM:
+Example (ESM):
 
 ```js
 import { init as initLDAP } from "@openinc/parse-server-ldap";
 
+export const init = async () => {
+  console.log("Init LDAP Plugin.");
+  await initLDAP(Parse);
+};
+```
+
+If your Cloud Code file is CommonJS, load the plugin with a dynamic `import()` instead of `require()`:
+
+```js
 const init = async () => {
   console.log("Init LDAP Plugin.");
-  initLDAP(Parse);
+
+  const { init: initLDAP } = await import("@openinc/parse-server-ldap");
+  await initLDAP(Parse);
 };
 
 module.exports.init = init;

@@ -1,6 +1,13 @@
 import cryptolib from "crypto";
 import { Client } from "ldapts";
-import Parse from "parse/node";
+import type ParseNode from "parse/node";
+
+type ParseInstance = typeof ParseNode;
+
+// Must be the host's Parse instance (the one Parse Server extends with Parse.Cloud).
+// Importing "parse/node" here could resolve to a different copy and register
+// cloud functions on an instance Parse Server never sees.
+let Parse!: ParseInstance;
 
 const useMasterKey = true;
 
@@ -41,7 +48,16 @@ const PARSE_LDAP_REJECT_UNAUTHORIZED = process.env.PARSE_LDAP_REJECT_UNAUTHORIZE
 
 const clientOptions = PARSE_LDAP_REJECT_UNAUTHORIZED ? {url: PARSE_LDAP_URL} : {url: PARSE_LDAP_URL, tlsOptions: {rejectUnauthorized: false}};
 
-export async function init() {
+export async function init(parse?: ParseInstance) {
+  const instance = parse ?? (globalThis as { Parse?: ParseInstance }).Parse;
+
+  if (!instance) {
+    console.log("Parse LDAP Plugin is not active. No Parse instance passed to init() and no global Parse found.");
+    return;
+  }
+
+  Parse = instance;
+
   if (!PARSE_LDAP_URL) {
     console.log("Parse LDAP Plugin is not active. PARSE_LDAP_URL is required.");
     return;
