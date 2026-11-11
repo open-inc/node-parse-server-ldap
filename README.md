@@ -49,11 +49,29 @@ module.exports.init = init;
    - `PARSE_LDAP_LOGIN_SEARCH_SCOPE`: **You probably want to set this to 'sub'** otherwise only `PARSE_LDAP_LOGIN_BIND_DN` will be searched but not its subordinates
    - `PARSE_LDAP_FUNCTION_NAME` (default: "ldap_login") will be passed to `Parse.Cloud.define(PARSE_LDAP_FUNCTION_NAME)`
    - `PARSE_LDAP_URL` (default: "ldap://127.0.0.1:389") should be set to the LDAP server connection URL
+   - `PARSE_LDAP_REJECT_UNAUTHORIZED` (default: "true") only applies to `ldaps://` URLs. The server certificate is validated by default. Set it to `"false"` to skip certificate validation (not recommended, only for testing).
+   - `PARSE_LDAP_CA_FILE` (optional) path to the CA certificate(s) used to validate the server certificate of an `ldaps://` connection, i.e. your internal/AD CA. See [LDAPS with an internal CA](#ldaps-with-an-internal-ca).
+   - `PARSE_LDAP_TIMEOUT` (default: "10") timeout in seconds for connecting to the LDAP server and for each LDAP operation.
+   - StartTLS (`ldap://` upgraded to TLS) is not supported. Use `ldaps://` for encrypted connections.
    - `PARSE_LDAP_BASEPATH` should be set to a base path, i.e.: `"dc=example,dc=com"`
    - `PARSE_LDAP_LOGIN_BIND_DN` must be set to a DN which will identify the user, i.e.: `"uid=%user%,ou=Users,%basepath%"`.
      - `%user%` will be replaced by the username the user is providing to the Cloud Code Function
      - `%userWithoutDomain%` same as `%user%`, but will strip the domain part, i.e.: `domain.com\username` will become `username`
      - `%basepath%` will be replaced by the value of `PARSE_LDAP_BASEPATH`
+
+### LDAPS with an internal CA
+
+LDAP servers (especially Active Directory) usually use a certificate issued by an internal CA, which Node.js does not trust by default. Since the server certificate is validated by default, you have to provide the CA certificate:
+
+1. Export the root certificate of your internal CA (and the intermediate/issuing CA, if the LDAP server does not send it). Both PEM (Base64) and DER (binary `.cer`, the default export format on Windows) are supported. A PEM file may contain multiple certificates.
+2. Make the file available to Parse Server and point `PARSE_LDAP_CA_FILE` to it, i.e. with docker compose for service **parse**:
+   - volumes: `./certs/internal-ca.pem:/usr/src/app/certs/internal-ca.pem:ro`
+   - environment: `PARSE_LDAP_URL: 'ldaps://dc01.example.local:636'` and `PARSE_LDAP_CA_FILE: '/usr/src/app/certs/internal-ca.pem'`
+3. The host name in `PARSE_LDAP_URL` must match the certificate (CN/SAN). Use the DNS name of the LDAP server, not an IP address or a short name that is not part of the certificate.
+
+If the CA file cannot be read, the plugin will not be activated. TLS errors during login (i.e. `UNABLE_TO_GET_ISSUER_CERT_LOCALLY` or `ERR_TLS_CERT_ALTNAME_INVALID`) are logged by Parse Server, the client only receives `Invalid username/password.`.
+
+Alternatively you can use the Node.js env `NODE_EXTRA_CA_CERTS` instead of `PARSE_LDAP_CA_FILE`.
 
 ### Procedure of binding a user aka authenticating a user against ldap
 
