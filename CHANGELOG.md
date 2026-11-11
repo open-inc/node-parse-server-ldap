@@ -1,3 +1,18 @@
+# [2.0.0](https://github.com/open-inc/node-parse-server-ldap/compare/v1.0.1...v2.0.0) (2026-11-11)
+
+
+* fix!: Only use TLS options for ldaps://, validate certificates and improve logging ([914a8a8](https://github.com/open-inc/node-parse-server-ldap/commit/914a8a8a82f774001714e1b7011b4d2da6f39bc4))
+
+
+### BREAKING CHANGES
+
+* PARSE_LDAP_REJECT_UNAUTHORIZED now defaults to true. LDAPS
+servers with certificates from an internal CA require PARSE_LDAP_CA_FILE (or
+NODE_EXTRA_CA_CERTS). Set PARSE_LDAP_REJECT_UNAUTHORIZED=false to restore the
+previous behavior (not recommended).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
 ## [1.0.1](https://github.com/open-inc/node-parse-server-ldap/compare/v1.0.0...v1.0.1) (2026-11-10)
 
 
