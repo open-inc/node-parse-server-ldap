@@ -1,3 +1,10 @@
+## [2.0.1](https://github.com/open-inc/node-parse-server-ldap/compare/v2.0.0...v2.0.1) (2026-11-17)
+
+
+### Bug Fixes
+
+* Log readable AD bind errors and skip unchanged user saves on login ([4bb6e6f](https://github.com/open-inc/node-parse-server-ldap/commit/4bb6e6fea898c939a38d1d72f69925566b30cfd0))
+
 # [2.0.0](https://github.com/open-inc/node-parse-server-ldap/compare/v1.0.1...v2.0.0) (2026-11-11)
 
 
