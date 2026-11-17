@@ -99,6 +99,31 @@ const TLS_ERROR_HINTS: Record<string, string> = {
 };
 
 /**
+ * Active Directory returns the actual reason of a failed bind (LDAP code 49) as a sub code
+ * in the diagnostic message, i.e. "AcceptSecurityContext error, data 533, v3839".
+ * These hints are only written to the log; the client always gets a generic error, so it
+ * can't be used to find out which accounts exist or are disabled.
+ */
+const AD_BIND_HINTS: Record<string, string> = {
+  "525": "User not found in Active Directory.",
+  "52e": "Invalid credentials (wrong password or user name).",
+  "530": "Login not permitted at this time (logon hours restriction).",
+  "531": "Login not permitted from this workstation.",
+  "532": "Password expired.",
+  "533": "Account is disabled in Active Directory.",
+  "568": "Too many security IDs (user is member of too many groups).",
+  "701": "Account expired in Active Directory.",
+  "773": "Password must be changed before first login (or was reset by an admin).",
+  "775": "Account is locked out in Active Directory.",
+};
+
+function getAdBindHint(message: string | undefined): string | undefined {
+  const subCode = /\bdata ([0-9a-f]{3,4})\b/i.exec(message ?? "")?.[1]?.toLowerCase();
+  if (!subCode) return undefined;
+  return `AD code ${subCode}: ${AD_BIND_HINTS[subCode] ?? "Unknown AD sub code."}`;
+}
+
+/**
  * Adds context (which step failed) to an error and a hint for common connection/TLS problems.
  * The original error is not attached as `cause` on purpose: TLS errors contain the whole
  * peer certificate, which would flood the logs on every failed login.
@@ -112,7 +137,8 @@ async function withContext<T>(context: string, fn: () => Promise<T>): Promise<T>
     const details = [name, err?.code, err?.message].filter(Boolean).join(": ") || String(error);
     const hint =
       (err?.code ? TLS_ERROR_HINTS[err.code] : undefined) ??
-      (err?.name === "TimeoutError" || /timeout/i.test(err?.message ?? "") ? TLS_ERROR_HINTS.TimeoutError : undefined);
+      (err?.name === "TimeoutError" || /timeout/i.test(err?.message ?? "") ? TLS_ERROR_HINTS.TimeoutError : undefined) ??
+      getAdBindHint(err?.message);
     const wrapped = new Error(`${context}: ${details}${hint ? ` -> ${hint}` : ""}`);
     if (err?.code) Object.assign(wrapped, { code: err.code });
     throw wrapped;
@@ -279,13 +305,30 @@ export async function init(parse?: ParseInstance) {
 
       // If there is a match
       if (user_a) {
-        user_a.set("username", user.username);
-        user_a.set("email", user.email);
-        user_a.set("name", user.name);
-        user_a.set(PARSE_LDAP_PARSE_LDAP_ATTRIBUTE, true);
-        user_a.set(PARSE_LDAP_PARSE_LDAP_DN_ATTRIBUTE, user.dn);
+        // Only save if LDAP data actually changed. Parse marks every set() as dirty, even with
+        // an unchanged value, so a save on every login would run all _User hooks needlessly.
+        const ldapValues: Record<string, unknown> = {
+          username: user.username,
+          email: user.email,
+          name: user.name,
+          [PARSE_LDAP_PARSE_LDAP_ATTRIBUTE]: true,
+          [PARSE_LDAP_PARSE_LDAP_DN_ATTRIBUTE]: user.dn,
+        };
 
-        await user_a.save(null, { useMasterKey });
+        // Compare serialized, LDAP attributes may be multi-valued (arrays).
+        const changedKeys = Object.keys(ldapValues).filter(
+          (key) => JSON.stringify(user_a.get(key)) !== JSON.stringify(ldapValues[key])
+        );
+
+        if (changedKeys.length > 0) {
+          for (const key of changedKeys) {
+            user_a.set(key, ldapValues[key]);
+          }
+
+          await user_a.save(null, { useMasterKey });
+
+          console.log(`${LOG_PREFIX} User "${user.username}" updated from LDAP (${changedKeys.join(", ")}).`);
+        }
 
         const sessionToken = "r:" + token.slice(0, 32);
         PARSE_LDAP_EXPIRE_LENGTH = process.env.PARSE_LDAP_EXPIRE_LENGTH
